@@ -1,0 +1,15 @@
+.cart {
+  &__title {
+    font-family: "Proxima Nova";
+    font-style: normal;
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 39px;
+    color: #000000;
+    svg {
+      width: 30px;
+      height: 30px;
+      fill: #3f3f3f;
+    }
+  }
+}

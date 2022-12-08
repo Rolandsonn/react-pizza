@@ -1,0 +1,30 @@
+.root {
+  :global {
+    li {
+      display: inline-block;
+      .seleceted {
+        background-color: #fe5f1e;
+        color: #ffffff;
+      }
+      a {
+        display: inline-block;
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        width: 40px;
+        line-height: 38px;
+        height: 40px;
+        border: 1px solid #fe5f1e;
+        border-radius: 30px;
+        cursor: pointer;
+        &:hover {
+          background-color: #fe5f1e;
+          color: #ffffff;
+        }
+        &:not(last-child) {
+          margin-right: 15px;
+        }
+      }
+    }
+  }
+}
