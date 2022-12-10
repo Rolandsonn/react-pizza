@@ -1,10 +1,15 @@
 import React from "react";
 import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setSort } from "../../redux/slices/filterSlice";
 
-export default function Sort({ value, onClickSortType }) {
+export default function Sort() {
+  const dispatch = useDispatch();
+  const sort = useSelector((state) => state.filter.sort);
+
   const [open, setOpen] = useState(false);
 
-  const sort = [
+  const sorts = [
     { name: "популярности (DESC)", sortProperty: "rating" },
     { name: "популярности (ASC)", sortProperty: "-rating" },
     { name: "цене (DESC)", sortProperty: "price" },
@@ -14,16 +19,16 @@ export default function Sort({ value, onClickSortType }) {
   ];
 
   const selectedClick = (index) => {
-    onClickSortType(index);
+    dispatch(setSort(index));
     setOpen(false);
   };
 
-  const sortElem = sort.map((item, index) => (
+  const sortElem = sorts.map((item, index) => (
     <li
       onClick={() => {
         selectedClick(item);
       }}
-      className={value.sortProperty === item.sortProperty ? "active" : ""}
+      className={sort.sortProperty === item.sortProperty ? "active" : ""}
       key={item.name}
     >
       {item.name}
@@ -41,7 +46,7 @@ export default function Sort({ value, onClickSortType }) {
             }}
             className="sort__popular"
           >
-            {value.name}
+            {sort.name}
           </span>
         </div>
         {open && (
