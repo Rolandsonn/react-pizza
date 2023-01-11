@@ -1,50 +1,102 @@
 import React from "react";
+
 import PizzaList from "../components/pizza";
 import Categories from "../components/Categories";
 import Sort from "../components/Sort";
-import axios from "axios";
 import Pagination from "../components/Pagination";
+
+import axios from "axios";
+import qs from "qs";
+
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
 import { SearchContext } from "../App";
-import { setCategoryId } from "../redux/slices/filterSlice";
+import {
+  setCategoryId,
+  setPageCurrent,
+  setFilters,
+} from "../redux/slices/filterSlice";
 import { useSelector, useDispatch } from "react-redux";
+import { sorts } from "../components/Sort/Sort";
+import { useRef } from "react";
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const categoryId = useSelector((state) => state.filter.categoryId);
+  const isSearch = useRef(false);
+  const isMounted = useRef(false);
+
+  const { categoryId, currentPage } = useSelector((state) => state.filter);
+
   const sortType = useSelector((state) => state.filter.sort.sortProperty);
 
   const [pizzas, setPizzas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  // const [categoryId, setCategoryId] = useState(0);
-  const [page, setPage] = useState(1);
-  // const [sortType, setSortType] = useState({
-  //   name: "популярности",
-  //   sortProperty: "rating",
-  // });
   const { searchValue } = useContext(SearchContext);
 
   const onChangeCategory = (id) => {
     dispatch(setCategoryId(id));
   };
 
-  const order = sortType.includes("-") ? "asc" : "desc";
-  const sortBy = sortType.replace("-", "");
-  const category = categoryId > 0 ? `category=${categoryId}` : "";
-  const search = searchValue ? `&search=${searchValue}` : "";
-  console.log(categoryId);
-  useEffect(() => {
-    fetch(
-      `https://638c9fead2fc4a058a5be365.mockapi.io/items?page=${page}&limit=6&${category}&sortBy=${sortBy}&order=${order}${search}`
-    )
-      .then((res) => res.json())
-      .then((arr) => {
-        setPizzas(arr);
-        setIsLoading(false);
-      });
-    // window.scrollTo(0, 0);
-  }, [category, sortBy, search, page, order]);
+  const onChangePage = (number) => {
+    dispatch(setPageCurrent(number));
+  };
 
+  const fetchPizzas = async () => {
+    setIsLoading(true);
+
+    const order = sortType.includes("-") ? "asc" : "desc";
+    const sortBy = sortType.replace("-", "");
+    const category = categoryId > 0 ? `category=${categoryId}` : "";
+    const search = searchValue ? `&search=${searchValue}` : "";
+
+    try {
+      const res = await axios.get(
+        `https://638c9fead2fc4a058a5be365.mockapi.io/items?page=${currentPage}&limit=6&${category}&sortBy=${sortBy}&order=${order}${search}`
+      );
+      setPizzas(res.data);
+    } catch (error) {
+      alert("Ошибка при получении пицц");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  //* Если изменили параметры и был первый рендер
+
+  useEffect(() => {
+    if (isMounted.current) {
+      const queryString = qs.stringify({
+        sortProperty: sortType,
+        categoryId,
+        currentPage,
+      });
+      navigate(`?${queryString}`);
+    }
+    isMounted.current = true;
+  }, [sortType, categoryId, currentPage, navigate]);
+
+  //* Если был первый рендер, то проверяем URL-парметры и сохраняем в редуксе
+
+  useEffect(() => {
+    if (window.location.search) {
+      const params = qs.parse(window.location.search.substring(1));
+      const sort = sorts.find(
+        (obj) => obj.sortProperty === params.sortProperty
+      );
+      dispatch(setFilters({ ...params, sort }));
+      isSearch.current = true;
+    }
+  }, []);
+
+  //* Если был первый рендер, то запрашиваем пиццы
+  useEffect(() => {
+    if (!isSearch.current) {
+      fetchPizzas();
+    }
+
+    isSearch.current = false;
+  }, [categoryId, sortType, searchValue, currentPage]);
   return (
     <>
       <div className="container home">
@@ -52,17 +104,14 @@ export default function HomePage() {
           value={categoryId}
           onClickCategory={(index) => onChangeCategory(index)}
         />
-        <Sort
-        // value={sortType}
-        // onClickSortType={(index) => setSortType(index)}
-        />
+        <Sort />
       </div>
       <PizzaList
         pizzas={pizzas}
         isLoading={isLoading}
         searchValue={searchValue}
       />
-      <Pagination onChangePage={(number) => setPage(number)} />
+      <Pagination currentPage={currentPage} onChangePage={onChangePage} />
     </>
   );
 }
