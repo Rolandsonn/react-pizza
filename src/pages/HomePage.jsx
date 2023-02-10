@@ -27,6 +27,7 @@ export default function HomePage() {
   const isMounted = useRef(false);
 
   const { categoryId, currentPage } = useSelector((state) => state.filter);
+  // const items = useSelector((state) => state.pizzas.items);
 
   const sortType = useSelector((state) => state.filter.sort.sortProperty);
 
